@@ -16,3 +16,7 @@ ts = Rinda::TupleSpaceProxy.new rinda
 puts "Connected to tuplespace #{ts_name} on #{ts_uri}"
 
 binding.irb
+
+# ts.write(["*", 3, 4])
+# x = ts.take(["result", nil])
+# exit

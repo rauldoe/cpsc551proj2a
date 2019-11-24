@@ -11,3 +11,13 @@ alice write ["-",9,3]
 alice take ["-",9,3]
 alice write ["result",6]
 alice take ["result",6]
+alice start druby://localhost:12345
+alice adapter http://localhost:8000
+alice write ["*",12,25]
+alice take ["*",12,25]
+alice write ["result",300]
+alice take ["result",300]
+alice write ["*",3,4]
+alice take ["*",3,4]
+alice write ["result",12]
+alice take ["result",12]
