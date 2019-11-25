@@ -6,6 +6,7 @@ import struct
 import socket
 
 import proxy
+from constants import Constants
 
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
@@ -18,7 +19,7 @@ def deserialize(data):
     dList = data.split()
 
     # print(f'data: {data} len: {len(dList)}')
-    return {'entity' : dList[0], 'event' : dList[1],  'message' : eval(dList[2]) }
+    return {Constants.MessageEntity : dList[0], Constants.MessageEvent : dList[1],  Constants.MessageData : eval(dList[2]) }
 
 def logToRecovery(recoveryFile, data):
     with open(recoveryFile, 'a+') as f: 
@@ -27,13 +28,13 @@ def logToRecovery(recoveryFile, data):
 
 def handleEvent(messageObj, serverList, messageList):
 
-    if (messageObj['event'] == 'start'):
-        ts = proxy.TupleSpaceAdapter(messageObj['message'])
-        serverList[messageObj['entity']] = {'message' : messageObj, 'instance' : ts}
-
-        replayEvents(messageObj['entity'], serverList, messageList)
+    if (messageObj[Constants.MessageEvent] == Constants.EventStart):
         print('start handled')
-    elif (messageObj['event'] == 'write'):
+        ts = proxy.TupleSpaceAdapter(messageObj[Constants.MessageData])
+        serverList[messageObj[Constants.MessageEntity]] = {Constants.ServerMessage : messageObj, Constants.ServerInstance : ts}
+
+        replayEvents(messageObj[Constants.MessageEntity], serverList, messageList)
+    elif (messageObj[Constants.MessageEvent] == Constants.EventWrite):
         print('write handled')
     else:
         print('else handled')
@@ -47,22 +48,38 @@ def loadFromRecovery(recoveryFile):
 
     messageList = map(lambda i: deserialize(i), notificationList)
 
-    return { 'notificationlist' : notificationList, 'messagelist' : messageList }
+    return { Constants.NotifyNList : notificationList, Constants.NotifyMList : messageList }
+
+def loadFromRecoveryServers(messageList):
+
+    serverList = []
+    replayList = list(filter(lambda i: (i[Constants.MessageEvent] == Constants.EventStart), MessageList))
+    for replay in replayList:
+        ts = proxy.TupleSpaceAdapter(replay[Constants.MessageData])
+        serverList[replay[Constants.MessageEntity]] = {Constants.ServerMessage : replay, Constants.ServerInstance : ts}
+    
+    return serverList
 
 def replayEvents(entity, serverList, messageList):
     
-    ts = serverList[entity]['instance']
+    ts = serverList[entity][Constants.ServerInstance]
 
-    replayList = list(filter(lambda i: (i['entity'] == entity) and (i['event'] == 'write'), messageList))
+    replayList = list(filter(lambda i: (i[Constants.MessageEntity] == entity) and (i[Constants.MessageEvent] == Constants.EventWrite), messageList))
 
     for replay in replayList:
-        ts._out(replay['message'])
+        ts._out(replay[Constants.MessageData])
 
 def main(address, port):
 
+    address = '224.0.0.1'
+    port = 54322
+
     lists = loadFromRecovery(RecoveryFilename)
-    NotificationList = lists['notificationlist']
-    MessageList = lists['messsagelist']
+    print(lists)
+    NotificationList = lists[Constants.NotifyNList]
+    MessageList = lists[Constants.NotifyMList]
+
+    ServerList = loadFromRecoveryServers(MessageList)
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
@@ -81,16 +98,17 @@ def main(address, port):
         while True:
             data, _ = sock.recvfrom(MAX_UDP_PAYLOAD)
             notification = data.decode()
+            print(notification)
 
             logRecovery(RecoveryFilename, notification)
 
-            messageObj = deserialize(notification)
+            message = deserialize(notification)
 
             NotificationList.append(notification)
-            MessageList.append(messageObj)
+            MessageList.append(message)
             # print(deserialize(notification))
 
-            handleEvent(messageObj, ServerList, MessageList)
+            handleEvent(message, ServerList, MessageList)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()
