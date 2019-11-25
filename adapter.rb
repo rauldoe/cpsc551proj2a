@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# clear; ruby adapter.rb -c bob.yaml
+
 require 'rinda/rinda'
 require 'xmlrpc/server'
 

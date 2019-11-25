@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# clear; python arithmetic_server.py -c bob.yaml
+
 import re
 
 import proxy

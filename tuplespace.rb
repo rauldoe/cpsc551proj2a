@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# clear; ruby tuplespace.rb -c bob.yaml
+
 require 'json'
 require 'socket'
 require 'rinda/tuplespace'
