@@ -11,6 +11,8 @@ import proxy
 MAX_UDP_PAYLOAD = 65507
 RecoveryFilename = 'recovery.out.txt'
 ServerList = {}
+NotificationList = []
+MessageList = []
 
 def deserialize(data):
     dList = data.split()
@@ -18,23 +20,50 @@ def deserialize(data):
     # print(f'data: {data} len: {len(dList)}')
     return {'entity' : dList[0], 'event' : dList[1],  'message' : eval(dList[2]) }
 
-def logRecovery(recoveryFile, data):
+def logToRecovery(recoveryFile, data):
     with open(recoveryFile, 'a+') as f: 
         f.write(f'{data}\n') 
     # print(data, flush=True)
 
-def handleEvent(messageObj, serverList):
+def handleEvent(messageObj, serverList, messageList):
 
     if (messageObj['event'] == 'start'):
         ts = proxy.TupleSpaceAdapter(messageObj['message'])
         serverList[messageObj['entity']] = {'message' : messageObj, 'instance' : ts}
+
+        replayEvents(messageObj['entity'], serverList, messageList)
         print('start handled')
     elif (messageObj['event'] == 'write'):
         print('write handled')
     else:
         print('else handled')
 
+def loadFromRecovery(recoveryFile):
+    notificationList = []
+    messageList = []
+
+    with open(recoveryFile, 'r') as f: 
+        notificationList = [line.rstrip() for line in f]
+
+    messageList = map(lambda i: deserialize(i), notificationList)
+
+    return { 'notificationlist' : notificationList, 'messagelist' : messageList }
+
+def replayEvents(entity, serverList, messageList):
+    
+    ts = serverList[entity]['instance']
+
+    replayList = list(filter(lambda i: (i['entity'] == entity) and (i['event'] == 'write'), messageList))
+
+    for replay in replayList:
+        ts._out(replay['message'])
+
 def main(address, port):
+
+    lists = loadFromRecovery(RecoveryFilename)
+    NotificationList = lists['notificationlist']
+    MessageList = lists['messsagelist']
+
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
     server_address = ('', int(port))
@@ -54,9 +83,14 @@ def main(address, port):
             notification = data.decode()
 
             logRecovery(RecoveryFilename, notification)
+
             messageObj = deserialize(notification)
+
+            NotificationList.append(notification)
+            MessageList.append(messageObj)
             # print(deserialize(notification))
-            handleEvent(messageObj)
+
+            handleEvent(messageObj, ServerList, MessageList)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()
