@@ -2,3 +2,7 @@ alice write ["*",3,4]
 alice take ["*",3,4]
 alice write ["result",12]
 alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345

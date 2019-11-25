@@ -19,7 +19,8 @@ def deserialize(data):
     dList = data.split()
 
     # print(f'data: {data} len: {len(dList)}')
-    return {Constants.MessageEntity : dList[0], Constants.MessageEvent : dList[1],  Constants.MessageData : eval(dList[2]) }
+    # return {Constants.MessageEntity : dList[0], Constants.MessageEvent : dList[1],  Constants.MessageData : eval(dList[2]) }
+    return {'entity': dList[0], 'event' : dList[1],  'data' : eval(dList[2]) }
 
 def logToRecovery(recoveryFile, data):
     with open(recoveryFile, 'a+') as f: 
@@ -71,9 +72,6 @@ def replayEvents(entity, serverList, messageList):
 
 def main(address, port):
 
-    address = '224.0.0.1'
-    port = 54322
-
     lists = loadFromRecovery(RecoveryFilename)
     print(lists)
     NotificationList = lists[Constants.NotifyNList]
@@ -100,7 +98,7 @@ def main(address, port):
             notification = data.decode()
             print(notification)
 
-            logRecovery(RecoveryFilename, notification)
+            logToRecovery(RecoveryFilename, notification)
 
             message = deserialize(notification)
 
