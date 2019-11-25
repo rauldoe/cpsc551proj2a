@@ -6,7 +6,6 @@ import struct
 import socket
 
 import proxy
-from constants import Constants
 
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
@@ -15,12 +14,26 @@ ServerList = {}
 NotificationList = []
 MessageList = []
 
+MessageEntity = 'entity'
+MessageEvent = 'event'
+MessageData = 'data'
+
+EventStart = 'start'
+EventWrite = 'write'
+EventTake = 'take'
+EventRead = 'read'
+
+ServerMessage = 'message'
+ServerInstance = 'instance'
+
+NotifyNList = 'notificationlist'
+NotifyMList = 'messagelist'
+
 def deserialize(data):
     dList = data.split()
 
     # print(f'data: {data} len: {len(dList)}')
-    # return {Constants.MessageEntity : dList[0], Constants.MessageEvent : dList[1],  Constants.MessageData : eval(dList[2]) }
-    return {'entity': dList[0], 'event' : dList[1],  'data' : eval(dList[2]) }
+    return {MessageEntity : dList[0], MessageEvent : dList[1],  MessageData : dList[2] }
 
 def logToRecovery(recoveryFile, data):
     with open(recoveryFile, 'a+') as f: 
@@ -29,13 +42,13 @@ def logToRecovery(recoveryFile, data):
 
 def handleEvent(messageObj, serverList, messageList):
 
-    if (messageObj[Constants.MessageEvent] == Constants.EventStart):
+    if (messageObj[MessageEvent] == EventStart):
         print('start handled')
-        ts = proxy.TupleSpaceAdapter(messageObj[Constants.MessageData])
-        serverList[messageObj[Constants.MessageEntity]] = {Constants.ServerMessage : messageObj, Constants.ServerInstance : ts}
+        ts = proxy.TupleSpaceAdapter(messageObj[MessageData])
+        serverList[messageObj[MessageEntity]] = {ServerMessage : messageObj, ServerInstance : ts}
 
-        replayEvents(messageObj[Constants.MessageEntity], serverList, messageList)
-    elif (messageObj[Constants.MessageEvent] == Constants.EventWrite):
+        replayEvents(messageObj[MessageEntity], serverList, messageList)
+    elif (messageObj[MessageEvent] == EventWrite):
         print('write handled')
     else:
         print('else handled')
@@ -47,35 +60,45 @@ def loadFromRecovery(recoveryFile):
     with open(recoveryFile, 'r') as f: 
         notificationList = [line.rstrip() for line in f]
 
-    messageList = map(lambda i: deserialize(i), notificationList)
+    messageList = list(map(lambda i: deserialize(i), notificationList))
 
-    return { Constants.NotifyNList : notificationList, Constants.NotifyMList : messageList }
+    return { NotifyNList : notificationList, NotifyMList : messageList }
+
+# def filterFromList(list, tag, val):
+#     newList = []
+
+#     for i in list:
+#         if (i[tag] == val):
+#             newList.append(i)
+    
+#     return newList
 
 def loadFromRecoveryServers(messageList):
 
     serverList = []
-    replayList = list(filter(lambda i: (i[Constants.MessageEvent] == Constants.EventStart), MessageList))
+    replayList = list(filter(lambda i: (i[MessageEvent] == EventStart), messageList))
+    # replayList = filterFromList(messageList, MessageEvent, EventStart)
     for replay in replayList:
-        ts = proxy.TupleSpaceAdapter(replay[Constants.MessageData])
-        serverList[replay[Constants.MessageEntity]] = {Constants.ServerMessage : replay, Constants.ServerInstance : ts}
+        ts = proxy.TupleSpaceAdapter(replay[MessageData])
+        serverList[replay[MessageEntity]] = {ServerMessage : replay, ServerInstance : ts}
     
     return serverList
 
 def replayEvents(entity, serverList, messageList):
     
-    ts = serverList[entity][Constants.ServerInstance]
+    ts = serverList[entity][ServerInstance]
 
-    replayList = list(filter(lambda i: (i[Constants.MessageEntity] == entity) and (i[Constants.MessageEvent] == Constants.EventWrite), messageList))
+    replayList = list(filter(lambda i: (i[MessageEntity] == entity) and (i[MessageEvent] == EventWrite), messageList))
 
     for replay in replayList:
-        ts._out(replay[Constants.MessageData])
+        ts._out(replay[MessageData])
 
 def main(address, port):
 
     lists = loadFromRecovery(RecoveryFilename)
-    print(lists)
-    NotificationList = lists[Constants.NotifyNList]
-    MessageList = lists[Constants.NotifyMList]
+    # print(lists)
+    NotificationList = lists[NotifyNList]
+    MessageList = lists[NotifyMList]
 
     ServerList = loadFromRecoveryServers(MessageList)
 

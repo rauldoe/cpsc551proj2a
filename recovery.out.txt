@@ -6,3 +6,10 @@ alice start druby://localhost:12345
 alice start druby://localhost:12345
 alice start druby://localhost:12345
 alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345

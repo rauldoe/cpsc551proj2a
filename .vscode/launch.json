@@ -8,7 +8,7 @@
             "name": "Python: Recovery Monitor",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "clear; ${file}",
             "args": ["224.0.0.1", "54322"],
             "console": "integratedTerminal"
         },
