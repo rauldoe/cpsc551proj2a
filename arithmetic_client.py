@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import proxy
+# clear; python arithmetic_client.py -c bob.yaml
 
+import proxy
 import config
 
 config = config.read_config()

@@ -3,7 +3,6 @@
 import re
 
 import proxy
-
 import config
 
 config = config.read_config()
