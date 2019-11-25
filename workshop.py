@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# clear; python workshop.py -c bob.yaml
+
 import code
 
 import proxy
@@ -19,7 +21,6 @@ print(f'Connected to tuplespace {ts_name} on {adapter_uri}')
 
 code.interact(local=locals())
 
-# clear; python workshop.py -c bob.yaml
 # ts._out(["*", 3, 4])
 # res = ts._in(["result", None])
 # print(res)

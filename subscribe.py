@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# clear; python subscribe.py 224.0.0.1 54321
+
 import sys
 import struct
 import socket

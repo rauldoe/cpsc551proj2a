@@ -14,4 +14,4 @@ bob_arithmetic_server: python arithmetic_server.py -c bob.yaml
 
 subscribe: python subscribe.py 224.0.0.1 54321
 
-recovery: python recovery.py 224.0.0.1 54322
+# recovery: python recovery.py 224.0.0.1 54322
