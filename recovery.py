@@ -6,6 +6,7 @@ import struct
 import socket
 
 import proxy
+import config
 
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
@@ -22,9 +23,11 @@ EventStart = 'start'
 EventWrite = 'write'
 EventTake = 'take'
 EventRead = 'read'
+EventAdapter = 'adapter'
 
 ServerMessage = 'message'
 ServerInstance = 'instance'
+ServerName = 'name'
 
 NotifyNList = 'notificationlist'
 NotifyMList = 'messagelist'
@@ -33,7 +36,9 @@ def deserialize(data):
     dList = data.split()
 
     # print(f'data: {data} len: {len(dList)}')
-    return {MessageEntity : dList[0], MessageEvent : dList[1],  MessageData : dList[2] }
+    event = dList[1]
+    data = dList[2] if (event == EventStart) or (event == EventAdapter) else eval(dList[2])
+    return {MessageEntity : dList[0], MessageEvent : event,  MessageData : data }
 
 def logToRecovery(recoveryFile, data):
     with open(recoveryFile, 'a+') as f: 
@@ -44,8 +49,15 @@ def handleEvent(messageObj, serverList, messageList):
 
     if (messageObj[MessageEvent] == EventStart):
         print('start handled')
-        ts = proxy.TupleSpaceAdapter(messageObj[MessageData])
-        serverList[messageObj[MessageEntity]] = {ServerMessage : messageObj, ServerInstance : ts}
+
+        configFilename = f'{messageObj[MessageEntity]}.yaml'
+        configObj = config.read_config1(configFilename)
+        adapter_host = configObj['adapter']['host']
+        adapter_port = configObj['adapter']['port']
+
+        adapter_uri = f'http://{adapter_host}:{adapter_port}'
+        ts = proxy.TupleSpaceAdapter(adapter_uri)
+        serverList[messageObj[MessageEntity]] = {ServerName : messageObj[MessageEntity], ServerMessage : messageObj, ServerInstance : ts}
 
         replayEvents(messageObj[MessageEntity], serverList, messageList)
     elif (messageObj[MessageEvent] == EventWrite):
@@ -75,12 +87,18 @@ def loadFromRecovery(recoveryFile):
 
 def loadFromRecoveryServers(messageList):
 
-    serverList = []
+    serverList = {}
     replayList = list(filter(lambda i: (i[MessageEvent] == EventStart), messageList))
     # replayList = filterFromList(messageList, MessageEvent, EventStart)
     for replay in replayList:
-        ts = proxy.TupleSpaceAdapter(replay[MessageData])
-        serverList[replay[MessageEntity]] = {ServerMessage : replay, ServerInstance : ts}
+        configFilename = f'{replay[MessageEntity]}.yaml'
+        configObj = config.read_config1(configFilename)
+        adapter_host = configObj['adapter']['host']
+        adapter_port = configObj['adapter']['port']
+
+        adapter_uri = f'http://{adapter_host}:{adapter_port}'
+        ts = proxy.TupleSpaceAdapter(adapter_uri)
+        serverList[replay[MessageEntity]] = {ServerName : replay[MessageEntity], ServerMessage : replay, ServerInstance : ts}
     
     return serverList
 
@@ -91,7 +109,15 @@ def replayEvents(entity, serverList, messageList):
     replayList = list(filter(lambda i: (i[MessageEntity] == entity) and (i[MessageEvent] == EventWrite), messageList))
 
     for replay in replayList:
-        ts._out(replay[MessageData])
+        try:
+            ts._out(replay[MessageData])
+        except:
+            print('replay err')
+
+def replayEventsAll(serverList, messageList):
+    
+    for server in serverList:
+        replayEvents(server, serverList, messageList)
 
 def main(address, port):
 
@@ -101,6 +127,8 @@ def main(address, port):
     MessageList = lists[NotifyMList]
 
     ServerList = loadFromRecoveryServers(MessageList)
+    
+    replayEventsAll(ServerList, MessageList)
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
