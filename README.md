@@ -6,7 +6,9 @@ or
 pip3 install PyYAML
 gem install xmlrpc 
 gem install foreman
-
-clear; foreman start
-
 clear; python arithmetic_client.py
+
+clear; foreman start -f Procfile.1
+clear; foreman start -f Procfile.2
+
+
