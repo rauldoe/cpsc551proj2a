@@ -1,0 +1,29 @@
+
+Content:
+Once you have implemented both approaches, compare the results in terms of 
+    reliability, 
+    fault tolerance, 
+    correctness
+Include in your submission a short report considering at least the following situations:
+    A tuplespace goes down
+    An adapter goes down
+
+First Approach:
+    reliability - the first approach is reliable in the sense that it will record all events and replay them
+    fault tolerance - the first approach is not very fault tolerant because there is a lot of moving parts
+    correctness - the first approach is correct as long as you don't use spaces in your topic or messages
+
+    Scenario
+        A tuplespace goes down - if the tuplespace goes down.  The recovery will record all of the actions.
+        An adapter goes down - if the adapter is down, the recovery will record all of the events.
+
+        when tuplespace comes up, the recovery will replay the events
+
+Second Approach:
+    reliability - 
+    fault tolerance - 
+    correctness - 
+
+    Scenario
+        A tuplespace goes down
+        An adapter goes down
