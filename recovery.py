@@ -58,18 +58,18 @@ def getTs(entity):
     ts = proxy.TupleSpaceAdapter(adapter_uri)
     return ts
 
-def handleEvent(messageObj, namingAdapter, messageList):
+def handleEvent(messageObj, namingAdapter, messageList, notification, recoveryFilename):
 
     if (messageObj[MessageEvent] == EventStart):
-        print('start handled')
+        logToRecovery(recoveryFilename, notification)
 
         td1 = namingAdapter._rd([messageObj[MessageEntity], 'adapter', None])
         adapterUri = td1[2]
         entityAdapter = proxy.TupleSpaceAdapter(adapterUri)
 
         replayEvents(messageObj[MessageEntity], entityAdapter, messageList)
-    elif (messageObj[MessageEvent] == EventWrite):
-        print('write handled')
+    elif ((messageObj[MessageEvent] == EventWrite) or (messageObj[MessageEvent] == EventTake)):
+        logToRecovery(recoveryFilename, notification)
     else:
         print('else handled')
 
@@ -165,15 +165,13 @@ def main(address, port):
             notification = data.decode()
             print(notification)
 
-            logToRecovery(RecoveryFilename, notification)
-
             message = deserialize(notification)
 
             NotificationList.append(notification)
             MessageList.append(message)
             # print(deserialize(notification))
 
-            handleEvent(message, _namingAdapter, MessageList)
+            handleEvent(message, _namingAdapter, MessageList, notification, RecoveryFilename)
     except Exception as e:
         print("Unexpected error:", sys.exc_info()[0])
         print(f'{e}')

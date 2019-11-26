@@ -48,10 +48,10 @@ def logToRecovery(recoveryFile, data):
         f.write(f'{data}\n') 
     # print(data, flush=True)
 
-def handleEvent(messageObj, serverList, messageList, ts):
+def handleEvent(messageObj, serverList, messageList, ts, notification, recoveryFilename):
 
     if ((messageObj[MessageEvent] == EventStart) or (messageObj[MessageEvent] == EventAdapter)):
-        print('start handled')
+        logToRecovery(recoveryFilename, notification)
         tupleData = [messageObj[MessageEntity], messageObj[MessageEvent], messageObj[MessageData]]
         ts._out(tupleData)
         updateServerList(ts, messageObj[MessageEntity])
@@ -139,8 +139,6 @@ def main(address, port):
             data, _ = sock.recvfrom(MAX_UDP_PAYLOAD)
             notification = data.decode()
             print(notification)
-
-            logToRecovery(RecoveryFilename, notification)
 
             message = deserialize(notification)
 
