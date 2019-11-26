@@ -33,6 +33,8 @@ ServerName = 'name'
 NotifyNList = 'notificationlist'
 NotifyMList = 'messagelist'
 
+_namingAdapter = None
+
 def deserialize(data):
     dList = data.split()
 
@@ -56,15 +58,16 @@ def getTs(entity):
     ts = proxy.TupleSpaceAdapter(adapter_uri)
     return ts
 
-def handleEvent(messageObj, serverList, messageList):
+def handleEvent(messageObj, namingAdapter, messageList):
 
     if (messageObj[MessageEvent] == EventStart):
         print('start handled')
 
-        ts = getTs(messageObj[MessageEntity])
-        serverList[messageObj[MessageEntity]] = {ServerName : messageObj[MessageEntity], ServerMessage : messageObj, ServerInstance : ts}
+        td1 = namingAdapter._rd([messageObj[MessageEntity], 'adapter', None])
+        adapterUri = td1[2]
+        entityAdapter = proxy.TupleSpaceAdapter(adapterUri)
 
-        replayEvents(messageObj[MessageEntity], serverList, messageList)
+        replayEvents(messageObj[MessageEntity], entityAdapter, messageList)
     elif (messageObj[MessageEvent] == EventWrite):
         print('write handled')
     else:
@@ -76,7 +79,7 @@ def loadFromRecovery(recoveryFile):
 
     open(recoveryFile, 'a+').close()
     with open(recoveryFile, 'r') as f: 
-        notificationList = [line.rstrip() for line in f]
+        notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
 
     messageList = list(map(lambda i: deserialize(i), notificationList))
 
@@ -94,33 +97,54 @@ def loadServerInfoFromRecovery(messageList):
     
     return serverList
 
-def replayEvents(entity, serverList, messageList):
-    
-    ts = serverList[entity][ServerInstance]
+def replayEvents(entity, entityAdapter, messageList):
 
     replayList = list(filter(lambda i: (i[MessageEntity] == entity) and ((i[MessageEvent] == EventWrite) or (i[MessageEvent] == EventTake)), messageList))
 
     for replay in replayList:
         try:
-            ts._out(replay[MessageData])
-        except:
-            print('replay err')
+            if (replay[MessageEvent] == EventWrite):
+                entityAdapter._out(replay[MessageData])
+            elif (replay[MessageEvent] == EventTake):
+                j = entityAdapter._inp(replay[MessageData])
+                print(f'write {j}')
+        except Exception as e:
+            print(f'replay err {e}')
 
-def replayEventsAll(serverList, messageList):
+def replayEventsAll(namingAdapter, messageList):
     
-    for server in serverList:
-        replayEvents(server, serverList, messageList)
+    try:
+        td = namingAdapter._rdp(['server_list', None])
+        if (td is not None):
+            serverList = td[1]
+            for server in serverList:
+                td1 = namingAdapter._rd([server, 'adapter', None])
+                adapterUri = td1[2]
+                entityAdapter = proxy.TupleSpaceAdapter(adapterUri)
+                replayEvents(server, entityAdapter, messageList)
+    except Exception as e:
+        print(f'naming: {e}')
 
 def main(address, port):
+
+    configFile = 'naming.yaml'
+    config1 = config.read_config1(configFile)
+
+    adapter_host = config1['adapter']['host']
+    adapter_port = config1['adapter']['port']
+
+    adapter_uri = f'http://{adapter_host}:{adapter_port}'
+
+    _namingAdapter = proxy.TupleSpaceAdapter(adapter_uri)
 
     lists = loadFromRecovery(RecoveryFilename)
     # print(lists)
     NotificationList = lists[NotifyNList]
     MessageList = lists[NotifyMList]
 
-    ServerList = loadServerInfoFromRecovery(MessageList)
+    # ServerList = loadServerInfoFromRecovery(MessageList)
     
-    replayEventsAll(ServerList, MessageList)
+    replayEventsAll(_namingAdapter, MessageList)
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
@@ -149,9 +173,10 @@ def main(address, port):
             MessageList.append(message)
             # print(deserialize(notification))
 
-            handleEvent(message, ServerList, MessageList)
-    except:
+            handleEvent(message, _namingAdapter, MessageList)
+    except Exception as e:
         print("Unexpected error:", sys.exc_info()[0])
+        print(f'{e}')
         sock.close()
 
 def usage(program):

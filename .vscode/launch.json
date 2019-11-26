@@ -5,11 +5,35 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Blog",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "-a", "read", "-p", "alice", "-t", "my topic", "-m", "my message"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Naming Monitor",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "224.0.0.1",
+                "54323"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Recovery Monitor",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["224.0.0.1", "54322"],
+            "args": [
+                "224.0.0.1",
+                "54322"
+            ],
             "console": "integratedTerminal"
         },
         {

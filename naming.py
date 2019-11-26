@@ -48,12 +48,13 @@ def logToRecovery(recoveryFile, data):
         f.write(f'{data}\n') 
     # print(data, flush=True)
 
-def handleEvent(messageObj, serverList, messageList):
+def handleEvent(messageObj, serverList, messageList, ts):
 
     if ((messageObj[MessageEvent] == EventStart) or (messageObj[MessageEvent] == EventAdapter)):
         print('start handled')
-
-        _ts._out(messageObj[MessageData])
+        tupleData = [messageObj[MessageEntity], messageObj[MessageEvent], messageObj[MessageData]]
+        ts._out(tupleData)
+        updateServerList(ts, messageObj[MessageEntity])
 
     else:
         print('else handled')
@@ -64,22 +65,46 @@ def loadFromRecovery(recoveryFile):
 
     open(recoveryFile, 'a+').close()
     with open(recoveryFile, 'r') as f: 
-        notificationList = [line.rstrip() for line in f]
+        notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
 
     messageList = list(map(lambda i: deserialize(i), notificationList))
 
     return { NotifyNList : notificationList, NotifyMList : messageList }
 
-def replayEvents(messageList):
+def addItem(myList, item):
+    isFound = False
+    for i in myList:
+        if (i==item):
+            isFound = True
+            break
+    if (not isFound):
+        myList.append(item)
+    
+    myList.sort()
+
+    return myList
+
+def updateServerList(ts, entity):
+    td = ts._in(['server_list', None])
+    serverList = td[1]
+    serverList = addItem(serverList, entity)
+    td[1] = serverList
+    ts._out(td)
+
+def replayEvents(messageList, ts):
 
     replayList = list(filter(lambda i: ((i[MessageEvent] == EventStart) or (i[MessageEvent] == EventAdapter)), messageList))
     # replayList = filterFromList(messageList, MessageEvent, EventStart)
     for replay in replayList:
-        _ts._out(replay[MessageData])
+        tupleData = [replay[MessageEntity], replay[MessageEvent], replay[MessageData]]
+        ts._out(tupleData)
+        updateServerList(ts, replay[MessageEntity])
+
 
 def main(address, port):
 
-    config1 = config.read_config()
+    configFile = 'naming.yaml'
+    config1 = config.read_config1(configFile)
 
     adapter_host = config1['adapter']['host']
     adapter_port = config1['adapter']['port']
@@ -87,13 +112,14 @@ def main(address, port):
     adapter_uri = f'http://{adapter_host}:{adapter_port}'
 
     _ts = proxy.TupleSpaceAdapter(adapter_uri)
+    _ts._out(['server_list', []])
 
     lists = loadFromRecovery(RecoveryFilename)
     # print(lists)
     NotificationList = lists[NotifyNList]
     MessageList = lists[NotifyMList]
 
-    replayEvents(MessageList)
+    replayEvents(MessageList, _ts)
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
@@ -122,7 +148,7 @@ def main(address, port):
             MessageList.append(message)
             # print(deserialize(notification))
 
-            handleEvent(message, ServerList, MessageList)
+            handleEvent(message, ServerList, MessageList, _ts)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()

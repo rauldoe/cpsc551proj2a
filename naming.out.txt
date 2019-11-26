@@ -1,0 +1,8 @@
+alice start druby://localhost:12345
+alice adapter http://localhost:8000
+alice write ["alice","mytopic","mymessage2222"]
+alice write ["alice","mytopic","mymessage"]
+alice take ["alice","mytopic","mymessage2222"]
+alice take ["alice","mytopic","mymessage"]
+alice write ["alice","mytopic","mymessage2222"]
+alice write ["alice","mytopic","mymessage"]
