@@ -1,13 +1,13 @@
 ---
-name: chuck
-uri: druby://localhost:12347
+name: naming
+uri: druby://localhost:12348
 notify:
   - address: 224.0.0.1
     port: 54321
   - address: 224.0.0.1
     port: 54322
-  - address: 224.0.0.1
-    port: 54323
+  # - address: 224.0.0.1
+  #   port: 54323
 filters:
   - [ ~, ~ ]
   - [ ~, ~, ~]
@@ -15,5 +15,5 @@ filters:
   - [ ~, ~, ~, ~, ~]
 adapter:
   host: localhost
-  port: 8002
+  port: 8003
   max_clients: 32

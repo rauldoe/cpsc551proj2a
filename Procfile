@@ -1,5 +1,12 @@
 # clear; foreman start
 # See <https://www.ruby-forum.com/t/forcing-stdout-sync-for-scripts/48876/8>
+
+naming_ts: ruby -e '$stdout.sync = true; load($0 = ARGV.shift)' tuplespace.rb -c naming.yaml
+naming_adapter: ruby -e '$stdout.sync = true; load($0 = ARGV.shift)' adapter.rb -c naming.yaml
+naming: python naming.py -c naming.yaml
+
+# recovery: python recovery.py 224.0.0.1 54322
+
 alice_ts: ruby -e '$stdout.sync = true; load($0 = ARGV.shift)' tuplespace.rb -c alice.yaml
 alice_adapter: ruby -e '$stdout.sync = true; load($0 = ARGV.shift)' adapter.rb -c alice.yaml
 alice_arithmetic_server: python arithmetic_server.py -c alice.yaml
@@ -14,4 +21,3 @@ bob_arithmetic_server: python arithmetic_server.py -c bob.yaml
 
 subscribe: python subscribe.py 224.0.0.1 54321
 
-# recovery: python recovery.py 224.0.0.1 54322

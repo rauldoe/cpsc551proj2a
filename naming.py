@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# clear; python recovery.py 224.0.0.1 54322
+# clear; python naming.py 224.0.0.1 54323
 
 import sys
 import struct
@@ -11,7 +11,7 @@ import config
 
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
-RecoveryFilename = 'recovery.out.txt'
+RecoveryFilename = 'naming.out.txt'
 ServerList = {}
 NotificationList = []
 MessageList = []
@@ -33,6 +33,8 @@ ServerName = 'name'
 NotifyNList = 'notificationlist'
 NotifyMList = 'messagelist'
 
+_ts = None
+
 def deserialize(data):
     dList = data.split()
 
@@ -46,27 +48,13 @@ def logToRecovery(recoveryFile, data):
         f.write(f'{data}\n') 
     # print(data, flush=True)
 
-def getTs(entity):
-    configFilename = f'{entity}.yaml'
-    configObj = config.read_config1(configFilename)
-    adapter_host = configObj['adapter']['host']
-    adapter_port = configObj['adapter']['port']
-
-    adapter_uri = f'http://{adapter_host}:{adapter_port}'
-    ts = proxy.TupleSpaceAdapter(adapter_uri)
-    return ts
-
 def handleEvent(messageObj, serverList, messageList):
 
-    if (messageObj[MessageEvent] == EventStart):
+    if ((messageObj[MessageEvent] == EventStart) or (messageObj[MessageEvent] == EventAdapter)):
         print('start handled')
 
-        ts = getTs(messageObj[MessageEntity])
-        serverList[messageObj[MessageEntity]] = {ServerName : messageObj[MessageEntity], ServerMessage : messageObj, ServerInstance : ts}
+        _ts._out(messageObj[MessageData])
 
-        replayEvents(messageObj[MessageEntity], serverList, messageList)
-    elif (messageObj[MessageEvent] == EventWrite):
-        print('write handled')
     else:
         print('else handled')
 
@@ -82,45 +70,30 @@ def loadFromRecovery(recoveryFile):
 
     return { NotifyNList : notificationList, NotifyMList : messageList }
 
-def loadServerInfoFromRecovery(messageList):
+def replayEvents(messageList):
 
-    serverList = {}
-    replayList = list(filter(lambda i: (i[MessageEvent] == EventStart), messageList))
+    replayList = list(filter(lambda i: ((i[MessageEvent] == EventStart) or (i[MessageEvent] == EventAdapter)), messageList))
     # replayList = filterFromList(messageList, MessageEvent, EventStart)
     for replay in replayList:
-
-        ts = getTs(replay[MessageEntity])
-        serverList[replay[MessageEntity]] = {ServerName : replay[MessageEntity], ServerMessage : replay, ServerInstance : ts}
-    
-    return serverList
-
-def replayEvents(entity, serverList, messageList):
-    
-    ts = serverList[entity][ServerInstance]
-
-    replayList = list(filter(lambda i: (i[MessageEntity] == entity) and ((i[MessageEvent] == EventWrite) or (i[MessageEvent] == EventTake)), messageList))
-
-    for replay in replayList:
-        try:
-            ts._out(replay[MessageData])
-        except:
-            print('replay err')
-
-def replayEventsAll(serverList, messageList):
-    
-    for server in serverList:
-        replayEvents(server, serverList, messageList)
+        _ts._out(replay[MessageData])
 
 def main(address, port):
+
+    config1 = config.read_config()
+
+    adapter_host = config1['adapter']['host']
+    adapter_port = config1['adapter']['port']
+
+    adapter_uri = f'http://{adapter_host}:{adapter_port}'
+
+    _ts = proxy.TupleSpaceAdapter(adapter_uri)
 
     lists = loadFromRecovery(RecoveryFilename)
     # print(lists)
     NotificationList = lists[NotifyNList]
     MessageList = lists[NotifyMList]
 
-    ServerList = loadServerInfoFromRecovery(MessageList)
-    
-    replayEventsAll(ServerList, MessageList)
+    replayEvents(MessageList)
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
