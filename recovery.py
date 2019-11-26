@@ -125,6 +125,45 @@ def replayEventsAll(namingAdapter, messageList):
     except Exception as e:
         print(f'naming: {e}')
 
+def isValidTs(ts):
+    isValid = False
+
+    try:
+        id = str(uuid.uuid4())
+        td = ts._rdp([id])
+
+        if (td is None):
+            ts._out([id])
+            ts._inp([id])
+
+        isValid = True
+    except:
+        isValid = False
+
+    return isValid
+
+def getEntityAdapter(ts, entity):
+    ets = None
+    td = ts._rdp([entity, 'adapter', None])
+    if (td is not None):
+        eadapter_uri = td[2]
+        ets = proxy.TupleSpaceAdapter(eadapter_uri)
+        if (not isValidTs(ets)):
+            ets = None
+
+    return ets
+
+def getEntityList(ts):
+    entityList = []
+    serverList = ts._rdp(['server_list', None])
+
+    for server in serverList:
+        ets = getEntityAdapter(ts, server)
+        if (ets is not None):
+            entityList.append(ets)
+    
+    return entityList
+
 def main(address, port):
 
     configFile = 'naming.yaml'

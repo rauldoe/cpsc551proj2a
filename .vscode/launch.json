@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -10,7 +7,7 @@
             "request": "launch",
             "program": "${file}",
             "args": [
-                "-a", "read", "-p", "alice", "-t", "my topic", "-m", "my message"
+                "-a", "read", "-p", "none", "-t", "mytopic", "-m", "mymessage"
             ],
             "console": "integratedTerminal"
         },

@@ -146,7 +146,7 @@ def main(address, port):
             MessageList.append(message)
             # print(deserialize(notification))
 
-            handleEvent(message, ServerList, MessageList, _ts)
+            handleEvent(message, ServerList, MessageList, _ts, notification, RecoveryFilename)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()
