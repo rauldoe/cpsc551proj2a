@@ -7,9 +7,9 @@ def read_config():
 
     args = parser.parse_args()
 
-    return read_config1(args.config)
+    return read_config_filename(args.config)
 
-def read_config1(filename):
+def read_config_filename(filename):
 
     with open(filename, 'r') as stream:
         return yaml.safe_load(stream)

@@ -8,6 +8,7 @@ import socket
 
 import proxy
 import config
+import uuid
 
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
