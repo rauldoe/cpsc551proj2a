@@ -11,4 +11,12 @@ clear; python arithmetic_client.py
 clear; foreman start -f Procfile.1
 clear; foreman start -f Procfile.2
 
+Ruby Debugging
+gem install ruby-debug-ide
+gem install debase
 
+Run in Terminal
+rdebug-ide --host 0.0.0.0 --port 1234 --dispatcher-port 26162 C:\temp\cpsc551proj2a\adapter.rb
+
+Run in VSCode
+clear; ruby adapter.rb -c alice.yaml

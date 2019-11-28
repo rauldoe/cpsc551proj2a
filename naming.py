@@ -5,121 +5,150 @@
 import sys
 import struct
 import socket
+import logging
 
 import proxy
 import config
 
+from common import Common
+
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
-RecoveryFilename = 'naming.out.txt'
-ServerList = {}
-NotificationList = []
-MessageList = []
 
-MessageEntity = 'entity'
-MessageEvent = 'event'
-MessageData = 'data'
+# RecoveryFilename = 'naming.out.txt'
+# ServerList = {}
+# NotificationList = []
+# MessageList = []
 
-EventStart = 'start'
-EventWrite = 'write'
-EventTake = 'take'
-EventRead = 'read'
-EventAdapter = 'adapter'
+# MessageEntity = 'entity'
+# MessageEvent = 'event'
+# MessageData = 'data'
 
-ServerMessage = 'message'
-ServerInstance = 'instance'
-ServerName = 'name'
+# EventStart = 'start'
+# EventWrite = 'write'
+# EventTake = 'take'
+# EventRead = 'read'
+# EventAdapter = 'adapter'
 
-NotifyNList = 'notificationlist'
-NotifyMList = 'messagelist'
+# ServerMessage = 'message'
+# ServerInstance = 'instance'
+# ServerName = 'name'
 
-_ts = None
+# NotifyNList = 'notificationlist'
+# NotifyMList = 'messagelist'
 
-def deserialize(data):
-    dList = data.split()
+# _ts = None
 
-    # print(f'data: {data} len: {len(dList)}')
-    event = dList[1]
-    data = dList[2] if (event == EventStart) or (event == EventAdapter) else eval(dList[2])
-    return {MessageEntity : dList[0], MessageEvent : event,  MessageData : data }
+def preInit():
 
-def logToRecovery(recoveryFile, data):
-    with open(recoveryFile, 'a+') as f: 
-        f.write(f'{data}\n') 
-    # print(data, flush=True)
+    configInfo = Common.getTsAdapterInfoFromConfig(Common.EntityNaming)
+    ts = proxy.TupleSpaceAdapter(configInfo[2])
+    if (Common.isValidTs(ts)):
+        try:
+            td = [configInfo[0], Common.EventStart, configInfo[1]]
+            ts._out(td)
 
-def handleEvent(messageObj, serverList, messageList, ts, notification, recoveryFilename):
+            td = [configInfo[0], Common.EventAdapter, configInfo[2]]
+            ts._out(td)
+        except:
+            logging.error(f'preinit failure')
 
-    if ((messageObj[MessageEvent] == EventStart) or (messageObj[MessageEvent] == EventAdapter)):
-        logToRecovery(recoveryFilename, notification)
-        tupleData = [messageObj[MessageEntity], messageObj[MessageEvent], messageObj[MessageData]]
-        ts._out(tupleData)
-        updateServerList(ts, messageObj[MessageEntity])
+def replayHandlingInfo():
+    return [[Common.EventStart, Common.EventAdapter], lambda msg, ts: handleEventForEachMessage(msg, ts)]
 
-    else:
-        print('else handled')
+def handleEventForEachMessage(message, ts):
 
-def loadFromRecovery(recoveryFile):
-    notificationList = []
-    messageList = []
+    if ((message[Common.MessageEvent] == Common.EventStart) or (message[Common.MessageEvent] == Common.EventAdapter)):
+        ts._out(message[Common.MessageData])
 
-    open(recoveryFile, 'a+').close()
-    with open(recoveryFile, 'r') as f: 
-        notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
+def handleEventMain(notification, notificationList, messageList, ts, logFilename):
 
-    messageList = list(map(lambda i: deserialize(i), notificationList))
+    message = Common.deserializeNotification(notification)
 
-    return { NotifyNList : notificationList, NotifyMList : messageList }
-
-def addItem(myList, item):
-    isFound = False
-    for i in myList:
-        if (i==item):
-            isFound = True
-            break
-    if (not isFound):
-        myList.append(item)
+    entity = message[Common.MessageEntity]
+    event = message[Common.MessageEvent]
     
-    myList.sort()
+    if ((event == Common.EventStart) or (event == Common.EventAdapter)):
+        Common.logNotificationToFile(logFilename, notification)
+        tupleData = [entity, event, message[Common.MessageData]]
+        try:
+            ts._out(tupleData)
+        except Exception as e:
+            logging.error(f'Update Server List Error {e}') 
 
-    return myList
+        Common.updateServerList(ts, entity)
+    
+    notificationList.append(notification)
+    messageList.append(message)
 
-def updateServerList(ts, entity):
-    td = ts._in(['server_list', None])
-    serverList = td[1]
-    serverList = addItem(serverList, entity)
-    td[1] = serverList
-    ts._out(td)
+# def deserialize(data):
+#     dList = data.split()
 
-def replayEvents(messageList, ts):
+#     # print(f'data: {data} len: {len(dList)}')
+#     event = dList[1]
+#     data = dList[2] if (event == EventStart) or (event == EventAdapter) else eval(dList[2])
+#     return {MessageEntity : dList[0], MessageEvent : event,  MessageData : data }
 
-    replayList = list(filter(lambda i: ((i[MessageEvent] == EventStart) or (i[MessageEvent] == EventAdapter)), messageList))
-    # replayList = filterFromList(messageList, MessageEvent, EventStart)
-    for replay in replayList:
-        tupleData = [replay[MessageEntity], replay[MessageEvent], replay[MessageData]]
-        ts._out(tupleData)
-        updateServerList(ts, replay[MessageEntity])
+# def logToRecovery(recoveryFile, data):
+#     with open(recoveryFile, 'a+') as f: 
+#         f.write(f'{data}\n') 
+#     # print(data, flush=True)
 
+# def loadFromRecovery(recoveryFile):
+#     notificationList = []
+#     messageList = []
+
+#     open(recoveryFile, 'a+').close()
+#     with open(recoveryFile, 'r') as f: 
+#         notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
+
+#     messageList = list(map(lambda i: deserialize(i), notificationList))
+
+#     return { NotifyNList : notificationList, NotifyMList : messageList }
+
+# def addItem(myList, item):
+#     isFound = False
+#     for i in myList:
+#         if (i==item):
+#             isFound = True
+#             break
+#     if (not isFound):
+#         myList.append(item)
+    
+#     myList.sort()
+
+#     return myList
+
+# def updateServerList(ts, entity):
+#     td = ts._in(['server_list', None])
+#     serverList = td[1]
+#     serverList = addItem(serverList, entity)
+#     td[1] = serverList
+#     ts._out(td)
+
+# def replayEvents(messageList, ts):
+
+#     replayList = list(filter(lambda i: ((i[MessageEvent] == EventStart) or (i[MessageEvent] == EventAdapter)), messageList))
+#     # replayList = filterFromList(messageList, MessageEvent, EventStart)
+#     for replay in replayList:
+#         tupleData = [replay[MessageEntity], replay[MessageEvent], replay[MessageData]]
+#         ts._out(tupleData)
+#         updateServerList(ts, replay[MessageEntity])
 
 def main(address, port):
 
-    configFile = 'naming.yaml'
-    config1 = config.read_config1(configFile)
+    preInit()
 
-    adapter_host = config1['adapter']['host']
-    adapter_port = config1['adapter']['port']
+    logFilename = f'{Common.EntityNaming}{Common.LogExtension}'
 
-    adapter_uri = f'http://{adapter_host}:{adapter_port}'
+    namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
-    _ts = proxy.TupleSpaceAdapter(adapter_uri)
-    _ts._out(['server_list', []])
-
-    lists = loadFromRecovery(RecoveryFilename)
-    # print(lists)
-    NotificationList = lists[NotifyNList]
-    MessageList = lists[NotifyMList]
-
-    replayEvents(MessageList, _ts)
+    lists = Common.loadNotificationFromFile(logFilename)
+    notificationList = lists[Common.NotifyNList]
+    messageList = lists[Common.NotifyMList]
+    
+    eri = replayHandlingInfo()
+    Common.replayEventsAll(namingTs, messageList, eri[0], eri[1])
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
@@ -140,13 +169,7 @@ def main(address, port):
             notification = data.decode()
             print(notification)
 
-            message = deserialize(notification)
-
-            NotificationList.append(notification)
-            MessageList.append(message)
-            # print(deserialize(notification))
-
-            handleEvent(message, ServerList, MessageList, _ts, notification, RecoveryFilename)
+            handleEventMain(notification, messageList, notificationList, namingTs, logFilename)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()

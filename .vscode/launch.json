@@ -2,12 +2,40 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug Ruby Adapter",
+            "type": "Ruby",
+            "request": "launch",
+            "program": "${workspaceRoot}/adapter.rb",
+            "args" : [
+                "-c",
+                "alice.yaml"
+            ]
+        },
+        {
+            "name": "Python: arithmetic client",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "-c",
+                "alice.yaml"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Blog",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "args": [
-                "-a", "read", "-p", "none", "-t", "mytopic", "-m", "mymessage"
+                "-a",
+                "read",
+                "-p",
+                "none",
+                "-t",
+                "mytopic",
+                "-m",
+                "mymessage"
             ],
             "console": "integratedTerminal"
         },

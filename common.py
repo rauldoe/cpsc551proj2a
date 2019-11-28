@@ -24,6 +24,12 @@ class Common:
 
     ServerList = 'server_list'
     TagAdapter = 'adapter'
+    TagUri = 'uri'
+    TagName = 'name'
+
+    EntityNaming = 'naming'
+
+    LogExtension = '.out.txt'
 
     @staticmethod
     def deserializeNotification(data):
@@ -88,15 +94,25 @@ class Common:
             logging.error("Error in _out for updateServerList")            
 
     @staticmethod
-    def getTsFromConfig(entity, serverType):
+    def getTsAdapterInfoFromConfig(entity):
+
 
         configFilename = f'{entity}.yaml'
         configObj = config.read_config_filename(configFilename)
-        host = configObj[serverType]['host']
-        port = configObj[serverType]['port']
+        host = configObj[Common.TagAdapter]['host']
+        port = configObj[Common.TagAdapter]['port']
 
-        uri = f'http://{host}:{port}'
-        ts = proxy.TupleSpaceAdapter(uri)
+        name = configObj[Common.TagName]
+        tsUri = configObj[Common.TagUri]
+        adapterUri = f'http://{host}:{port}'
+
+        return (name, tsUri, adapterUri)
+
+    @staticmethod
+    def getTsFromConfig(entity, serverType):
+
+        info = Common.getTsAdapterInfoFromConfig(entity)
+        ts = proxy.TupleSpaceAdapter(info[2])
 
         return ts
 
@@ -129,16 +145,18 @@ class Common:
 
             if (td is None):
                 ts._out([id])
-                ts._inp([id])
+                td = ts._inp([id])
 
-            isValid = True
-        except:
+            isValid = (td is not None)
+        except Exception as e:
+            logging.error(f'isValidTs failure {e}')
             isValid = False
 
         return isValid
 
     @staticmethod
     def getEntityTsList(ts):
+
         entityList = []
         serverList = Common.getServerList(ts)
 
