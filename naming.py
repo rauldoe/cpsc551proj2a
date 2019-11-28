@@ -15,30 +15,6 @@ from common import Common
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
 
-# RecoveryFilename = 'naming.out.txt'
-# ServerList = {}
-# NotificationList = []
-# MessageList = []
-
-# MessageEntity = 'entity'
-# MessageEvent = 'event'
-# MessageData = 'data'
-
-# EventStart = 'start'
-# EventWrite = 'write'
-# EventTake = 'take'
-# EventRead = 'read'
-# EventAdapter = 'adapter'
-
-# ServerMessage = 'message'
-# ServerInstance = 'instance'
-# ServerName = 'name'
-
-# NotifyNList = 'notificationlist'
-# NotifyMList = 'messagelist'
-
-# _ts = None
-
 def preInit():
 
     configInfo = Common.getTsAdapterInfoFromConfig(Common.EntityNaming)
@@ -59,7 +35,8 @@ def replayHandlingInfo():
 def handleEventForEachMessage(message, ts):
 
     if ((message[Common.MessageEvent] == Common.EventStart) or (message[Common.MessageEvent] == Common.EventAdapter)):
-        ts._out(message[Common.MessageData])
+        ts._out(Common.messageToTuple(message))
+        Common.updateServerList(ts, message[Common.MessageEntity])
 
 def handleEventMain(notification, notificationList, messageList, ts, logFilename):
 
@@ -81,60 +58,6 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
     notificationList.append(notification)
     messageList.append(message)
 
-# def deserialize(data):
-#     dList = data.split()
-
-#     # print(f'data: {data} len: {len(dList)}')
-#     event = dList[1]
-#     data = dList[2] if (event == EventStart) or (event == EventAdapter) else eval(dList[2])
-#     return {MessageEntity : dList[0], MessageEvent : event,  MessageData : data }
-
-# def logToRecovery(recoveryFile, data):
-#     with open(recoveryFile, 'a+') as f: 
-#         f.write(f'{data}\n') 
-#     # print(data, flush=True)
-
-# def loadFromRecovery(recoveryFile):
-#     notificationList = []
-#     messageList = []
-
-#     open(recoveryFile, 'a+').close()
-#     with open(recoveryFile, 'r') as f: 
-#         notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
-
-#     messageList = list(map(lambda i: deserialize(i), notificationList))
-
-#     return { NotifyNList : notificationList, NotifyMList : messageList }
-
-# def addItem(myList, item):
-#     isFound = False
-#     for i in myList:
-#         if (i==item):
-#             isFound = True
-#             break
-#     if (not isFound):
-#         myList.append(item)
-    
-#     myList.sort()
-
-#     return myList
-
-# def updateServerList(ts, entity):
-#     td = ts._in(['server_list', None])
-#     serverList = td[1]
-#     serverList = addItem(serverList, entity)
-#     td[1] = serverList
-#     ts._out(td)
-
-# def replayEvents(messageList, ts):
-
-#     replayList = list(filter(lambda i: ((i[MessageEvent] == EventStart) or (i[MessageEvent] == EventAdapter)), messageList))
-#     # replayList = filterFromList(messageList, MessageEvent, EventStart)
-#     for replay in replayList:
-#         tupleData = [replay[MessageEntity], replay[MessageEvent], replay[MessageData]]
-#         ts._out(tupleData)
-#         updateServerList(ts, replay[MessageEntity])
-
 def main(address, port):
 
     preInit()
@@ -148,7 +71,8 @@ def main(address, port):
     messageList = lists[Common.NotifyMList]
     
     eri = replayHandlingInfo()
-    Common.replayEventsAll(namingTs, messageList, eri[0], eri[1])
+    entityList = [[Common.EntityNaming, namingTs]]
+    Common.replayEventsAll(namingTs, entityList, messageList, eri[0], eri[1])
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 

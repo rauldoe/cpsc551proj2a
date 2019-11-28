@@ -1,0 +1,2 @@
+alice start druby://localhost:12345
+alice adapter http://localhost:8000

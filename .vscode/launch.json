@@ -29,9 +29,9 @@
             "program": "${file}",
             "args": [
                 "-a",
-                "read",
+                "post",
                 "-p",
-                "none",
+                "alice",
                 "-t",
                 "mytopic",
                 "-m",

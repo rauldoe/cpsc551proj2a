@@ -69,7 +69,7 @@ class Common:
         td = None
 
         try:
-            td = ts._inp([Common.ServerList, None])
+            td = ts._rdp([Common.ServerList, None])
         except:
             logging.error("Error in _inp for getServerList")
 
@@ -84,7 +84,9 @@ class Common:
         serverList = Common.getServerList(ts)
         
         if (serverList is not None):
-            serverList = (set(serverList)).add(entity)
+            s = set(serverList)
+            s.add(entity)
+            serverList = list(s)
 
         td = [Common.ServerList, serverList]
         
@@ -161,16 +163,20 @@ class Common:
         serverList = Common.getServerList(ts)
 
         for server in serverList:
-            ets = Common.getTsFromNaming(ts, server, Common.TagAdapter)
+            ets = Common.getTsFromNaming(server, Common.TagAdapter, ts)
             if Common.isValidTs(ets):
-                entityList.append(ets)
+                entityList.append([server, ets])
         
         return entityList
 
     @staticmethod
+    def messageToTuple(message):
+        return [message[Common.MessageEntity], message[Common.MessageEvent], message[Common.MessageData]]
+
+    @staticmethod
     def replayEvents(entity, entityTs, messageList, eventList, handleEventFunc):
 
-        replayList = list(filter(lambda i: (i[Common.MessageEntity] == entity) and (i[Common.MessageEvent] in eventList), messageList))
+        replayList = list(filter(lambda i: (i[Common.MessageEvent] in eventList), messageList))
 
         for replay in replayList:
             try:
@@ -179,15 +185,13 @@ class Common:
                 logging.error(f'Replay Error {e}')            
 
     @staticmethod
-    def replayEventsAll(ts, messageList, eventList, handleEventFunc):
-    
-        serverList = Common.getServerList(ts)
+    def replayEventsAll(ts, entityList, messageList, eventList, handleEventFunc):
 
         try:
-            for server in serverList:
-                entityTs = Common.getTsFromNaming(server, 'adapter', ts)
-                if (entityTs is not None):
-                    Common.replayEvents(server, entityTs, messageList, eventList, handleEventFunc)
+            for i in range(len(entityList)):
+                entity = entityList[i][0]
+                entityTs = entityList[i][1]
+                Common.replayEvents(entity, entityTs, messageList, eventList, handleEventFunc)
 
         except:
-            logging.error("Error in _rdp for replayEventsAll")
+            logging.error("Error in replayEventsAll")

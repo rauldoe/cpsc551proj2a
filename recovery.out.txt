@@ -1,0 +1,7 @@
+naming write ["naming","start","druby://localhost:12348"]
+naming write ["naming","adapter","http://localhost:8003"]
+alice start druby://localhost:12345
+naming write ["alice","start","druby://localhost:12345"]
+naming write ["naming","start","druby://localhost:12348"]
+naming write ["naming","adapter","http://localhost:8003"]
+alice write ["bob","mytopic","mymessage"]
