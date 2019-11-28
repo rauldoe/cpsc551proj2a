@@ -82,16 +82,38 @@ class Common:
 
     @staticmethod
     def getServerList(ts):
+        return Common.processServerList(ts, lambda  its: its._rdp([Common.ServerList, None]))
+
+    @staticmethod
+    def popServerList(ts):
+        return Common.processServerList(ts, lambda  its: its._inp([Common.ServerList, None]), True)
+    
+    @staticmethod
+    def popServerListAll(ts):
+        
+        data = Common.popServerList(ts)
+        serverList = data
+
+        while (data is not None):
+            data = Common.popServerList(ts)
+
+        return serverList
+
+    @staticmethod
+    def processServerList(ts, procFunc, doReturnNull = False):
 
         serverList = []
         td = None
 
         try:
-            td = ts._rdp([Common.ServerList, None])
+            td = procFunc(ts)
+            # td = ts._inp([Common.ServerList, None])
         except:
-            logging.error("Error in _inp for getServerList")
+            logging.error("Error in processServerList")
 
-        if (td is not None):
+        if ((td is None) and doReturnNull):
+            serverList = None
+        else:
             serverList = td[1]
         
         return serverList
@@ -99,19 +121,25 @@ class Common:
     @staticmethod
     def updateServerList(ts, entity):
         
-        serverList = Common.getServerList(ts)
-        
-        if (serverList is not None):
-            s = set(serverList)
-            s.add(entity)
-            serverList = list(s)
+        serverList = Common.popServerListAll(ts)
+        serverList = [] if (serverList is None) else serverList
 
-        td = [Common.ServerList, serverList]
-        
-        try:
-            ts._out(td)
-        except:
-            logging.error("Error in _out for updateServerList")            
+        if (entity not in serverList):
+
+            if (len(serverList) <= 0):
+                serverList = [entity]
+            else:
+                s = set(serverList)
+                s.add(entity)
+                serverList = list(s)
+
+            td = [Common.ServerList, serverList]
+            
+            try:
+                ts._out(td)
+            except:
+                logging.error("Error in _out for updateServerList")            
+        # if (entity not in serverList):
 
     @staticmethod
     def getTsAdapterInfoFromConfig(entity):
@@ -219,3 +247,15 @@ class Common:
 
         except:
             logging.error("Error in replayEventsAll")
+    
+    @staticmethod
+    def playEventsAll(ts, tdList, handleEventFunc):
+
+        entityList = Common.getEntityTsList(ts)
+        for entityObj in entityList:
+            for td in tdList:
+                try:
+                    handleEventFunc(td, entityObj[0], entityObj[1])
+                except Exception as e:
+                    logging.error(f'playEventsAll, {entityObj[0]} {td} {e}')
+        

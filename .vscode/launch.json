@@ -28,8 +28,10 @@
             "request": "launch",
             "program": "${file}",
             "args": [
+                "-s",
+                "bob"
                 "-a",
-                "read",
+                "post",
                 "-p",
                 "alice",
                 "-t",

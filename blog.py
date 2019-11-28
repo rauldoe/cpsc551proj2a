@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# clear; python blog.py -a post -p bob -t "mytopic" -m "mymessage"
+# clear; python blog.py -s alice -a post -p bob -t "mytopic" -m "mymessage"
 
 import uuid
 import argparse
@@ -14,6 +14,7 @@ from common import Common
 def commandLine():
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--server', type=str, default='alice')
     parser.add_argument('-a', '--action', type=str, default='read')
     parser.add_argument('-p', '--poster', type=str, default='alice')
     parser.add_argument('-t', '--topic', type=str, default='gtcn')
@@ -54,17 +55,12 @@ ts = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
 if (args.action == 'read'):
     
-    if (args.poster == 'all'):
-        readBlog('alice', None, args, ts)
-    else:
-        readBlog(args.poster, args.poster, args, ts)
-    # if (args.poster == 'all'):
+    poster = None if (args.poster == 'all') else args.poster   
+    readBlog(args.server, args.poster, args, ts)
     
 elif (args.action == 'post'):
 
     td = [args.poster, args.topic, args.message]
-    entityList = Common.getEntityTsList(ts)
-    for entityObj in entityList:
-        entityObj[1]._out(td)
+    Common.playEventsAll(ts, [td], lambda name, ets, itd: ets._out(itd))
     print(f'post blog: {td}')
 # if (args.action == 'read'):
