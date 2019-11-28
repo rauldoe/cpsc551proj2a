@@ -26,7 +26,7 @@ def readBlog(server, poster, args, ts):
     if (ets is not None):
         dataList = []
         current = None
-        td = [None, args.topic, None]
+        td = [poster, args.topic, None]
         data = ets._inp(td)
         if ((data is not None) and (data != current)):
             dataList.append(data)
@@ -57,7 +57,7 @@ if (args.action == 'read'):
     if (args.poster == 'all'):
         readBlog('alice', None, args, ts)
     else:
-        readBlog('alice', args.poster, args, ts)
+        readBlog(args.poster, args.poster, args, ts)
     # if (args.poster == 'all'):
     
 elif (args.action == 'post'):
