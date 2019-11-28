@@ -21,43 +21,47 @@ def commandLine():
 
     return parser.parse_args()
 
+def readBlog(server, poster, args, ts):
+    ets = Common.getTsFromNaming(server, Common.TagAdapter, ts)
+    if (ets is not None):
+        dataList = []
+        current = None
+        td = [None, args.topic, None]
+        data = ets._inp(td)
+        if ((data is not None) and (data != current)):
+            dataList.append(data)
+            print(f'read blog: {data}')
+            current = data
+        else:
+            data = None
+
+        while (data is not None):
+            td = [poster, args.topic, None]
+            data = ets._inp(td)
+            if ((data is not None) and (data != current)):
+                dataList.append(data)
+                print(f'read blog: {data}')
+            else:
+                data = None
+
+        for data in dataList:
+            ets._out(data)
+    # if (ets is not None):
+
 args = commandLine()
 # print(f'a {args.action}, p {args.poster}, t {args.topic}, m {args.message}')
 ts = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
 if (args.action == 'read'):
     
-    poster = None
-    if (args.poster != 'none'):
-        poster = args.poster
-
-        ets = Common.getTsFromNaming(poster, Common.TagAdapter, ts)
-        if (ets is not None):
-            dataList = []
-            current = None
-            td = [poster, args.topic, None]
-            data = ets._inp(td)
-            if ((data is not None) and (data != current)):
-                dataList.append(data)
-                print(f'read blog: {data}')
-                current = data
-            else:
-                data = None
-
-            while (data is not None):
-                td = [poster, args.topic, None]
-                data = ets._inp(td)
-                if ((data is not None) and (data != current)):
-                    dataList.append(data)
-                    print(f'read blog: {data}')
-                else:
-                    data = None
-
-            for data in dataList:
-                ets._out(data)
-        # if (ets is not None):
-    # if (args.poster != 'none'):
+    if (args.poster == 'all'):
+        readBlog('alice', None, args, ts)
+    else:
+        readBlog('alice', args.poster, args, ts)
+    # if (args.poster == 'all'):
+    
 elif (args.action == 'post'):
+
     td = [args.poster, args.topic, args.message]
     entityList = Common.getEntityTsList(ts)
     for entityObj in entityList:

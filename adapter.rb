@@ -74,10 +74,12 @@ puts "Adapter for tuplespace #{ts_name} started at #{adapter_uri}"
 
 begin
   sock = open_multicast_socket
-  notify_addrs.each do |dest|
-    puts "Sending notifications to udp://#{dest['address']}:#{dest['port']}"
+  if !notify_addrs.nil?
+    notify_addrs.each do |dest|
+      puts "Sending notifications to udp://#{dest['address']}:#{dest['port']}"
+    end
+    notify_all notify_addrs, sock, "#{ts_name} adapter #{adapter_uri}"
   end
-  notify_all notify_addrs, sock, "#{ts_name} adapter #{adapter_uri}"
 ensure
   sock.close
 end

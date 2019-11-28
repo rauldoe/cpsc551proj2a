@@ -29,7 +29,7 @@
             "program": "${file}",
             "args": [
                 "-a",
-                "post",
+                "read",
                 "-p",
                 "alice",
                 "-t",

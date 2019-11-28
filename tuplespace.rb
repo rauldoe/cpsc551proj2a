@@ -34,16 +34,18 @@ ts = start_tuplespace ts_name, ts_uri
 
 begin
   sock = open_multicast_socket
-  notify_addrs.each do |dest|
-    puts "Sending notifications to udp://#{dest['address']}:#{dest['port']}"
-  end
-  notify_all notify_addrs, sock, "#{ts_name} start #{ts_uri}"
-
-  mn = MultipleNotify.new ts, nil, config['filters']
-  loop do
-    event, tuple = mn.pop
-    json = JSON.generate(map_symbols_out(tuple))
-    notify_all notify_addrs, sock, "#{ts_name} #{event} #{json}"
+  if !notify_addrs.nil?
+    notify_addrs.each do |dest|
+      puts "Sending notifications to udp://#{dest['address']}:#{dest['port']}"
+    end
+    notify_all notify_addrs, sock, "#{ts_name} start #{ts_uri}"
+  
+    mn = MultipleNotify.new ts, nil, config['filters']
+    loop do
+      event, tuple = mn.pop
+      json = JSON.generate(map_symbols_out(tuple))
+      notify_all notify_addrs, sock, "#{ts_name} #{event} #{json}"
+    end
   end
 
   DRb.thread.join

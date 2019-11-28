@@ -189,7 +189,13 @@ class Common:
 
     @staticmethod
     def messageToTuple(message):
-        return [message[Common.MessageEntity], message[Common.MessageEvent], message[Common.MessageData]]
+
+        evtList = [Common.EventWrite, Common.EventTake]
+
+        if (message[Common.MessageEvent] in evtList):
+            return message[Common.MessageData]
+        else:
+            return [message[Common.MessageEntity], message[Common.MessageEvent], message[Common.MessageData]]
 
     @staticmethod
     def replayEvents(entity, entityTs, messageList, eventList, handleEventFunc):
