@@ -49,7 +49,12 @@ class Common:
             f.write(f'{data}\n')
 
     @staticmethod
-    def loadNotificationFromFile(filename):
+    def logNotificationListToFile(filename, notificationList):
+        with open(filename, 'w+') as f:
+            f.writelines([f'{i}\n' for i in notificationList])
+
+    @staticmethod
+    def loadNotificationFromFile(filename, isUnique):
 
         notificationList = []
         messageList = []
@@ -58,9 +63,22 @@ class Common:
         with open(filename, 'r') as f: 
             notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
 
+        if isUnique:
+            notificationSet = set(notificationList)
+            notificationList = list(notificationSet)
+
         messageList = list(map(lambda i: Common.deserializeNotification(i), notificationList))
 
         return { Common.NotifyNList : notificationList, Common.NotifyMList : messageList }
+
+    @staticmethod 
+    def processNotificationFromFile(filename, isUnique):
+
+        lists = Common.loadNotificationFromFile(filename, isUnique)
+        if isUnique:
+            Common.logNotificationListToFile(filename, lists[Common.NotifyNList])
+        
+        return lists
 
     @staticmethod
     def getServerList(ts):

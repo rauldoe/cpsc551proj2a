@@ -56,7 +56,7 @@ def main(address, port):
 
         namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
-        lists = Common.loadNotificationFromFile(logFilename)
+        lists = Common.processNotificationFromFile(logFilename, False)
         notificationList = lists[Common.NotifyNList]
         messageList = lists[Common.NotifyMList]
         
