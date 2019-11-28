@@ -60,19 +60,25 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
 
 def main(address, port):
 
-    preInit()
+    try:
+        preInit()
+    except Exception as e:
+        logging.error(f'preInit failure {e}')
 
-    logFilename = f'{Common.EntityNaming}{Common.LogExtension}'
+    try:
+        logFilename = f'{Common.EntityNaming}{Common.LogExtension}'
 
-    namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
+        namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
-    lists = Common.loadNotificationFromFile(logFilename)
-    notificationList = lists[Common.NotifyNList]
-    messageList = lists[Common.NotifyMList]
-    
-    eri = replayHandlingInfo()
-    entityList = [[Common.EntityNaming, namingTs]]
-    Common.replayEventsAll(namingTs, entityList, messageList, eri[0], eri[1])
+        lists = Common.loadNotificationFromFile(logFilename)
+        notificationList = lists[Common.NotifyNList]
+        messageList = lists[Common.NotifyMList]
+        
+        eri = replayHandlingInfo()
+        entityList = [[Common.EntityNaming, namingTs]]
+        Common.replayEventsAll(namingTs, entityList, messageList, eri[0], eri[1])
+    except Exception as e:
+        logging.error(f'replayEventsAll failure {e}')
 
     # See <https://pymotw.com/3/socket/multicast.html> for details
 
@@ -93,7 +99,7 @@ def main(address, port):
             notification = data.decode()
             print(notification)
 
-            handleEventMain(notification, messageList, notificationList, namingTs, logFilename)
+            handleEventMain(notification, notificationList, messageList, namingTs, logFilename)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()

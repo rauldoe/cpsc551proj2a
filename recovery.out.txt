@@ -5,3 +5,17 @@ naming write ["alice","start","druby://localhost:12345"]
 naming write ["naming","start","druby://localhost:12348"]
 naming write ["naming","adapter","http://localhost:8003"]
 alice write ["bob","mytopic","mymessage"]
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+alice start druby://localhost:12345
+naming write ["alice","start","druby://localhost:12345"]
+naming write ["server_list",["alice"]]
+naming write ["alice","adapter","http://localhost:8000"]
+naming write ["server_list",["alice"]]
+alice write ["naming","write",["naming","start","druby://localhost:12348"]]
+alice write ["naming","write",["naming","adapter","http://localhost:8003"]]
+alice write ["naming","write",["alice","start","druby://localhost:12345"]]
+alice write ["naming","write",["naming","start","druby://localhost:12348"]]
+alice write ["naming","write",["naming","adapter","http://localhost:8003"]]
+alice write ["alice","write",["bob","mytopic","mymessage"]]
