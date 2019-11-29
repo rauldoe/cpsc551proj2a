@@ -34,8 +34,8 @@ def readBlog(server, poster, args, ts):
 
     # if (ets is not None):
 
-en = Common.EntityNaming
-# en = Common.EntityTuplemanager
+# en = Common.EntityNaming
+en = Common.EntityTuplemanager
 args = commandLine()
 # print(f'a {args.action}, p {args.poster}, t {args.topic}, m {args.message}')
 ts = Common.getTsFromConfig(en, Common.TagAdapter)

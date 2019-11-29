@@ -51,7 +51,7 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
         try:
             ts._out(tupleData)
         except Exception as e:
-            logging.error(f'Update Server List Error {e}') 
+            logging.error(f'_out Error {e}') 
 
         Common.updateServerList(ts, entity)
     
@@ -98,7 +98,6 @@ def main(address, port):
         while True:
             data, _ = sock.recvfrom(MAX_UDP_PAYLOAD)
             notification = data.decode()
-            print(notification)
 
             handleEventMain(notification, notificationList, messageList, namingTs, logFilename, isUnique)
     except:

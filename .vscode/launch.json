@@ -2,6 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Tuplemanager Monitor",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "224.0.0.1",
+                "54324"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Debug Ruby Adapter",
             "type": "Ruby",
             "request": "launch",
@@ -35,7 +46,7 @@
                 "-p",
                 "all",
                 "-t",
-                "mytopic15",
+                "mytopic16",
                 "-m",
                 "mymessage"
             ],

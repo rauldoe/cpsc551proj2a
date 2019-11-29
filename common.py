@@ -28,6 +28,9 @@ class Common:
     TagName = 'name'
 
     EntityNaming = 'naming'
+    EntityTuplemanager = 'tuplemanager'
+
+    Recovery = 'recovery'
 
     LogExtension = '.out.txt'
 
@@ -227,9 +230,12 @@ class Common:
             return [message[Common.MessageEntity], message[Common.MessageEvent], message[Common.MessageData]]
 
     @staticmethod
-    def replayEvents(entity, entityTs, messageList, eventList, handleEventFunc):
+    def replayEvents(entity, entityTs, messageList, eventList, handleEventFunc, ignoreEntity):
 
-        replayList = list(filter(lambda i: ((i['entity'] == entity) and (i[Common.MessageEvent] in eventList)), messageList))
+        if ignoreEntity:
+            replayList = list(filter(lambda i: (i[Common.MessageEvent] in eventList), messageList))
+        else:
+            replayList = list(filter(lambda i: ((i['entity'] == entity) and (i[Common.MessageEvent] in eventList)), messageList))
 
         for replay in replayList:
             try:
@@ -238,13 +244,13 @@ class Common:
                 logging.error(f'Replay Error {e}')            
 
     @staticmethod
-    def replayEventsAll(ts, entityList, messageList, eventList, handleEventFunc):
+    def replayEventsAll(ts, entityList, messageList, eventList, handleEventFunc, ignoreEntity):
 
         try:
             for i in range(len(entityList)):
                 entity = entityList[i][0]
                 entityTs = entityList[i][1]
-                Common.replayEvents(entity, entityTs, messageList, eventList, handleEventFunc)
+                Common.replayEvents(entity, entityTs, messageList, eventList, handleEventFunc, ignoreEntity)
 
         except:
             logging.error("Error in replayEventsAll")
@@ -259,4 +265,10 @@ class Common:
                     handleEventFunc(td, entityObj[0], entityObj[1])
                 except Exception as e:
                     logging.error(f'playEventsAll, {entityObj[0]} {td} {e}')
-        
+
+    @staticmethod
+    def getSortedUnique(ts, td):
+        s = ts._rd_all(td)
+        uniqueList = [list(i) for i in set(tuple(j) for j in s)]
+        uniqueList.sort()
+        return uniqueList

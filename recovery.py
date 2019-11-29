@@ -16,6 +16,9 @@ from common import Common
 # per <https://en.wikipedia.org/wiki/User_Datagram_Protocol>
 MAX_UDP_PAYLOAD = 65507
 
+def preInit():
+    logging.info('preInit')
+
 def replayHandlingInfo():
     return [[Common.EventWrite, Common.EventTake], lambda msg, ts: handleEventForEachMessage(msg, ts)]
 
@@ -52,7 +55,12 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
 def main(address, port):
 
     try:
-        logFilename = f'recovery{Common.LogExtension}'
+        preInit()
+    except Exception as e:
+        logging.error(f'preInit failure {e}')
+
+    try:
+        logFilename = f'{Common.Recovery}{Common.LogExtension}'
 
         namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
