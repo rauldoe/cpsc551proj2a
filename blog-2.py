@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# clear; python blog.py -s alice -a post -p bob -t "mytopic" -m "mymessage"
+# clear; python blog-2.py -s alice -a post -p bob -t "mytopic" -m "mymessage"
 
 import uuid
 import argparse
@@ -48,6 +48,8 @@ if (args.action == 'read'):
 elif (args.action == 'post'):
 
     td = [args.poster, args.topic, args.message]
-    Common.playEventsAll(ts, [td], lambda itd, name, ets: ets._out(itd))
+    # Common.playEventsAll(ts, [td], lambda itd, name, ets: ets._out(itd))
+    ets = Common.getTsFromNaming(args.poster, Common.TagAdapter, ts)
+    ets._out(td)
     print(f'post blog: {td}')
 # if (args.action == 'read'):

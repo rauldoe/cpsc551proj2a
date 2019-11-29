@@ -53,22 +53,25 @@ def handleEventMain(notification, ts, procList):
 
     entity = message[Common.MessageEntity]
     event = message[Common.MessageEvent]
+    td = [entity, event, message[Common.MessageData]]
 
     if ((event == Common.EventStart) or (event == Common.EventAdapter)):
         if (event == Common.EventStart):
  
-            ets = Common.getTsFromNaming(entity, Common.TagAdapter, ts)
+            # recovery functionality
             eri = replayHandlingInfo()
-
-            Common.replayEvents(entity, ets, procList[1][4], eri[0], eri[1], procList[1][5])
+            etsList = Common.getEntityTsList(ts)
+            for ets in etsList:
+                Common.replayEvents(entity, ets, procList[1][4], eri[0], eri[1], procList[1][5])
 
             procList[1][3].append(notification)
             procList[1][4].append(message)
 
+        # naming functionality
         Common.logNotificationToFile(procList[0][0], notification, procList[0][3], procList[0][1])
-        tupleData = [entity, event, message[Common.MessageData]]
+
         try:
-            ts._out(tupleData)
+            ts._out(td)
         except Exception as e:
             logging.error(f'_out Error {e}') 
 
@@ -78,10 +81,16 @@ def handleEventMain(notification, ts, procList):
         procList[0][4].append(message)
 
     elif ((event == Common.EventWrite) or (event == Common.EventTake)):
-        Common.logNotificationToFile(procList[1][0], notification, procList[1][3], procList[1][1])
 
-        procList[1][3].append(notification)
-        procList[1][4].append(message)
+        # recovery functionality
+        # print('recovery functionality for write, take')
+        if (message[Common.MessageData] not in [i[Common.MessageData] for i in procList[1][4]]):
+
+            Common.playEventsAll(ts, [message[Common.MessageData]], lambda itd, name, ets: ets._out(itd))
+            Common.logNotificationToFile(procList[1][0], notification, procList[1][3], procList[1][1])
+
+            procList[1][3].append(notification)
+            procList[1][4].append(message)
     
     else:
         return
@@ -104,7 +113,7 @@ def main(address, port):
         eri = replayHandlingInfo()
 
         try:
-            logFilename1 = f'{Common.EntityNaming}{Common.LogExtension}'
+            logFilename1 = f'{Common.EntityTuplemanager}_{Common.EntityNaming}{Common.LogExtension}'
             isUnique1 = True
             ignoreEntity1 = True
             entityListFunc1 = lambda : [[Common.EntityTuplemanager, namingTs]]
@@ -113,7 +122,7 @@ def main(address, port):
             raise Exception(f'naming set error {nse}')
         
         try:
-            logFilename2 = f'{Common.Recovery}{Common.LogExtension}'
+            logFilename2 = f'{Common.EntityTuplemanager}_{Common.Recovery}{Common.LogExtension}'
             isUnique2 = False
             ignoreEntity2 = False
             entityListFunc2 = lambda : Common.getEntityTsList(namingTs)

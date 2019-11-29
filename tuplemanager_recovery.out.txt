@@ -1,0 +1,1 @@
+alice write ["alice","mytopic18","mymessage4"]
