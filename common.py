@@ -229,7 +229,7 @@ class Common:
     @staticmethod
     def replayEvents(entity, entityTs, messageList, eventList, handleEventFunc):
 
-        replayList = list(filter(lambda i: (i[Common.MessageEvent] in eventList), messageList))
+        replayList = list(filter(lambda i: ((i['entity'] == entity) and (i[Common.MessageEvent] in eventList)), messageList))
 
         for replay in replayList:
             try:
