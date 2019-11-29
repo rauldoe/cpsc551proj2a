@@ -29,13 +29,13 @@
             "program": "${file}",
             "args": [
                 "-s",
-                "bob"
-                "-a",
-                "post",
-                "-p",
                 "alice",
+                "-a",
+                "read",
+                "-p",
+                "all",
                 "-t",
-                "mytopic",
+                "mytopic15",
                 "-m",
                 "mymessage"
             ],

@@ -38,7 +38,7 @@ def handleEventForEachMessage(message, ts):
         ts._out(Common.messageToTuple(message))
         Common.updateServerList(ts, message[Common.MessageEntity])
 
-def handleEventMain(notification, notificationList, messageList, ts, logFilename):
+def handleEventMain(notification, notificationList, messageList, ts, logFilename, isUnique):
 
     message = Common.deserializeNotification(notification)
 
@@ -46,7 +46,7 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
     event = message[Common.MessageEvent]
     
     if ((event == Common.EventStart) or (event == Common.EventAdapter)):
-        Common.logNotificationToFile(logFilename, notification)
+        Common.logNotificationToFile(logFilename, notification, notificationList, isUnique)
         tupleData = [entity, event, message[Common.MessageData]]
         try:
             ts._out(tupleData)
@@ -70,7 +70,8 @@ def main(address, port):
 
         namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
-        lists = Common.processNotificationFromFile(logFilename, True)
+        isUnique = True
+        lists = Common.processNotificationFromFile(logFilename, isUnique)
         notificationList = lists[Common.NotifyNList]
         messageList = lists[Common.NotifyMList]
         
@@ -99,7 +100,7 @@ def main(address, port):
             notification = data.decode()
             print(notification)
 
-            handleEventMain(notification, notificationList, messageList, namingTs, logFilename)
+            handleEventMain(notification, notificationList, messageList, namingTs, logFilename, isUnique)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sock.close()

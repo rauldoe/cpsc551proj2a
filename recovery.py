@@ -27,7 +27,7 @@ def handleEventForEachMessage(message, ts):
         # ignore return value
         ts._inp(Common.messageToTuple(message))
 
-def handleEventMain(notification, notificationList, messageList, ts, logFilename):
+def handleEventMain(notification, notificationList, messageList, ts, logFilename, isUnique):
 
     message = Common.deserializeNotification(notification)
 
@@ -35,14 +35,14 @@ def handleEventMain(notification, notificationList, messageList, ts, logFilename
     event = message[Common.MessageEvent]
 
     if (event == Common.EventStart):
-        Common.logNotificationToFile(logFilename, notification)
+        # Common.logNotificationToFile(logFilename, notification, notificationList, isUnique)
 
         ets = Common.getTsFromNaming(entity, Common.TagAdapter, ts)
         eri = replayHandlingInfo()
 
         Common.replayEvents(entity, ets, messageList, eri[0], eri[1])
     elif ((event == Common.EventWrite) or (event == Common.EventTake)):
-        Common.logNotificationToFile(logFilename, notification)
+        Common.logNotificationToFile(logFilename, notification, notificationList, isUnique)
     else:
         return
 
@@ -56,7 +56,8 @@ def main(address, port):
 
         namingTs = Common.getTsFromConfig(Common.EntityNaming, Common.TagAdapter)
 
-        lists = Common.processNotificationFromFile(logFilename, False)
+        isUnique = True
+        lists = Common.processNotificationFromFile(logFilename, isUnique)
         notificationList = lists[Common.NotifyNList]
         messageList = lists[Common.NotifyMList]
         
@@ -84,7 +85,7 @@ def main(address, port):
             data, _ = sock.recvfrom(MAX_UDP_PAYLOAD)
             notification = data.decode()
 
-            handleEventMain(notification, notificationList, messageList, namingTs, logFilename)
+            handleEventMain(notification, notificationList, messageList, namingTs, logFilename, isUnique)
     except Exception as e:
         print("Unexpected error:", sys.exc_info()[0])
         print(f'{e}')

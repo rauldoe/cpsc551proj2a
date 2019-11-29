@@ -43,10 +43,11 @@ class Common:
         return {Common.MessageEntity : dList[0], Common.MessageEvent : event,  Common.MessageData : data }
 
     @staticmethod
-    def logNotificationToFile(filename, data):
+    def logNotificationToFile(filename, data, notificationList, isUnique):
 
-        with open(filename, 'a+') as f:
-            f.write(f'{data}\n')
+        if not (isUnique and (data in notificationList)):
+            with open(filename, 'a+') as f:
+                f.write(f'{data}\n')
 
     @staticmethod
     def logNotificationListToFile(filename, notificationList):
@@ -64,8 +65,7 @@ class Common:
             notificationList = list(filter(lambda i: i != '', [line.rstrip() for line in f]))
 
         if isUnique:
-            notificationSet = set(notificationList)
-            notificationList = list(notificationSet)
+            notificationList = list(set(notificationList))
 
         messageList = list(map(lambda i: Common.deserializeNotification(i), notificationList))
 
