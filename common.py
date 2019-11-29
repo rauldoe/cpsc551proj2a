@@ -132,14 +132,15 @@ class Common:
                 s = set(serverList)
                 s.add(entity)
                 serverList = list(s)
-
-            td = [Common.ServerList, serverList]
-            
-            try:
-                ts._out(td)
-            except:
-                logging.error("Error in _out for updateServerList")            
+       
         # if (entity not in serverList):
+
+        td = [Common.ServerList, serverList]
+        
+        try:
+            ts._out(td)
+        except:
+            logging.error("Error in _out for updateServerList")     
 
     @staticmethod
     def getTsAdapterInfoFromConfig(entity):
