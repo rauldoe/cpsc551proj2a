@@ -35,9 +35,21 @@ class Common:
     LogExtension = '.out.txt'
 
     @staticmethod
+    def splitNotification(data):
+    
+        sp = []
+        idx0 = data.index(' ')
+        sp.append(data[0:idx0])
+        idx1 = data.index(' ', idx0+1)
+        sp.append(data[idx0+1:idx1])
+        sp.append(data[idx1+1:])
+
+        return sp
+
+    @staticmethod
     def deserializeNotification(data):
 
-        dList = data.split()
+        dList = Common.splitNotification(data)
 
         # print(f'data: {data} len: {len(dList)}')
         event = dList[1]

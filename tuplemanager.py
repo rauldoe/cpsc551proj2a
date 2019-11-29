@@ -61,8 +61,8 @@ def handleEventMain(notification, ts, procList):
             # recovery functionality
             eri = replayHandlingInfo()
             etsList = Common.getEntityTsList(ts)
-            for ets in etsList:
-                Common.replayEvents(entity, ets, procList[1][4], eri[0], eri[1], procList[1][5])
+            for etsi in etsList:
+                Common.replayEvents(entity, etsi[1], procList[1][4], eri[0], eri[1], procList[1][5])
 
             procList[1][3].append(notification)
             procList[1][4].append(message)

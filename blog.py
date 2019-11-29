@@ -28,9 +28,12 @@ def readBlog(server, poster, args, ts):
     if (ets is not None):
 
         td = [poster, args.topic, None]
-        dataList = Common.getSortedUnique(ets, td)
-        for data in dataList:
-            print(f'read blog: {data}')
+        try:
+            dataList = Common.getSortedUnique(ets, td)
+            for data in dataList:
+                print(f'read blog: {data}')
+        except:
+            print('read error')
 
     # if (ets is not None):
 

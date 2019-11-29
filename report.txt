@@ -9,9 +9,16 @@ Include in your submission a short report considering at least the following sit
     An adapter goes down
 
 First Approach:
+	Run:
+		clear; foreman start -f Procfile.1
+		clear; foreman start -f Procfile.2
+		clear; python blog.py -s alice -a post -p bob -t "my topic" -m "my message"
+		clear; python blog.py -s alice -a read -p bob -t "my topic" -m "mymessage"
+		clear; python blog.py -s alice -a read -p all -t "my topic" -m "mymessage"
+		
     reliability - the first approach is reliable in the sense that it will record all events and replay them
     fault tolerance - the first approach is not very fault tolerant because there is a lot of moving parts
-    correctness - the first approach is correct as long as you don't use spaces in your topic or messages
+    correctness - the first approach is correct with some problems of not recording the correct messages if you post with non-existent user.  Topics/messages with spaces have been corrected.
 
     Scenario
         A tuplespace goes down - if the tuplespace goes down.  The recovery will record all of the actions.
@@ -20,10 +27,19 @@ First Approach:
         when tuplespace comes up, the recovery will replay the events
 
 Second Approach:
-    reliability - 
-    fault tolerance - 
-    correctness - 
+	Run:
+		clear; foreman start -f Procfile.1-2
+		clear; foreman start -f Procfile.2
+		clear; python blog-2.py -s alice -a post -p bob -t "my topic" -m "my message"
+		clear; python blog-2.py -s alice -a read -p bob -t "my topic" -m "mymessage"
+		clear; python blog-2.py -s alice -a read -p all -t "my topic" -m "mymessage"
+
+		reliability - the second approach seems to be more reliable because all of the action is done on the one server which does not depend on the reliability of a client
+    fault tolerance - the second approach is not that fault tolerant because the tuplemanager server is the single point of faiure.
+    correctness - the first approach is correct with some problems of not recording the correct messages if you post with non-existent user.  Topics/messages with spaces have been corrected.
 
     Scenario
-        A tuplespace goes down
-        An adapter goes down
+        A tuplespace goes down - if the tuplespace goes down.  The recovery will record all of the write/take actions once.
+        An adapter goes down - if the adapter is down, the recovery will record all of the events.  The recovery will record all of the write/take actions once.
+
+        when tuplespace comes up, the recovery will replay the events
